@@ -24,10 +24,12 @@ const credentials = { key: privateKey, cert: certificate };
 const server = https.createServer(credentials, main);
 
 const IO  = require('socket.io');
-const io = IO(server);
+const io = IO(server, {
+    cors:{origin: '*'}
+});
+
 io.listen(server)
 //io.set('log level', 2);
-
 server.listen(PORT, '0.0.0.0', function() {
     console.log("Listening on port " + PORT);
 });
