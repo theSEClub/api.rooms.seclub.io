@@ -9,11 +9,11 @@ const PORT = 8080;
 /*************/
 const fs = require("fs");
 const express = require('express');
-//var http = require('http');
+var http = require('http');
 const https = require("https");
 const bodyParser = require('body-parser')
 const main = express()
-//const server = http.createServer(main)
+const server = http.createServer(main)
 
 
 let privateKey, certificate;
@@ -21,7 +21,7 @@ let privateKey, certificate;
 privateKey = fs.readFileSync("ssl/server-key.pem", "utf8");
 certificate = fs.readFileSync("ssl/server-cert.pem", "utf8");
 const credentials = { key: privateKey, cert: certificate };
-const server = https.createServer(credentials, main);
+// const server = https.createServer(credentials, main);
 
 const IO  = require('socket.io');
 const io = IO(server, {
@@ -86,6 +86,7 @@ io.sockets.on('connection', function (socket) {
         }
 
         for (id in channels[channel]) {
+            console.log('emitting addPeer...')
             channels[channel][id].emit('addPeer', {'peer_id': socket.id, 'should_create_offer': false});
             socket.emit('addPeer', {'peer_id': id, 'should_create_offer': true});
         }
