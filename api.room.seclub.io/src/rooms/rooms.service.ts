@@ -6,12 +6,11 @@ import { Socket } from 'socket.io';
 @Injectable()
 export class RoomsService {
   constructor(@Inject(CACHE_MANAGER) private cacheManager: Cache) {
-    this.cacheManager.set('rooms', {});
-    this.cacheManager.set('users', {});
+    this.cacheManager.set('rooms', {}, 0);
+    this.cacheManager.set('users', {}, 0);
   }
 
   async getRooms(): Promise<string[]> {
-    console.log('get rooms');
     return await this.cacheManager.get('rooms');
   }
 
@@ -29,10 +28,25 @@ export class RoomsService {
 
       if (!room) {
         all[room_id] = {};
-        all[room_id][socket.id] = username;
       }
 
-      await this.cacheManager.set('rooms', all);
+      for (const user in all[room_id]) {
+        socket.to(user).emit('addPeer', {
+          username: username,
+          peer_id: socket.id,
+          should_create_offer: false,
+        });
+
+        socket.emit('addPeer', {
+          username: all[room_id][user],
+          peer_id: user,
+          should_create_offer: true,
+        });
+      }
+
+      all[room_id][socket.id] = username;
+
+      await this.cacheManager.set('rooms', all, 0);
 
       return true;
     } catch (error) {
@@ -42,11 +56,11 @@ export class RoomsService {
 
   async saveUser(socket: Socket, username: string): Promise<boolean> {
     try {
-      const all = (await this.cacheManager.get('users')) as any;
+      const all = (await this.cacheManager.get('users')) as { id: string }[];
 
       all[socket.id] = username;
 
-      await this.cacheManager.set('users', all);
+      await this.cacheManager.set('users', all, 0);
 
       return true;
     } catch (error) {
