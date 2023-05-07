@@ -22,9 +22,7 @@ export class RoomsGateway {
   async handleJoin(client: Socket, data: string): Promise<string[]> {
     const payload = JSON.parse(data);
 
-    const res = await this.roomsService.saveUser(client, payload.username);
-
-    if (!res) {
+    if (!(await this.roomsService.saveUser(client, payload.username))) {
       throw new Error('Error Registering User');
     }
 
