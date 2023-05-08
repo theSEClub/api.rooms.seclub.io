@@ -62,18 +62,67 @@ export class RoomsService {
 
   async saveUser(client: Socket, username: string): Promise<boolean> {
     try {
-      const all = (await this.cacheManager.get('users')) as Client[];
+      const users = (await this.cacheManager.get('users')) as Client[];
 
       const user = new Client(client.id, username);
 
-      all[client.id] = user;
+      users.push(user);
 
-      await this.cacheManager.set('users', all, 0);
+      await this.cacheManager.set('users', users, 0);
 
       return true;
     } catch (error) {
       console.log(error);
       return false;
     }
+  }
+
+  async removeUser(client: Socket): Promise<boolean> {
+    try {
+      const users = (await this.cacheManager.get('users')) as Client[];
+
+      const index = users.findIndex((user) => user.id === client.id);
+      users.splice(index, 1);
+
+      await this.cacheManager.set('users', users, 0);
+
+      return true;
+    } catch (error) {
+      console.log(error);
+      return false;
+    }
+  }
+
+  async removeUserFromRooms(client: Socket, server: Server): Promise<boolean> {
+    try {
+      const rooms = (await this.cacheManager.get('rooms')) as Room[];
+
+      rooms.forEach((room) => {
+        const index = room.clients.findIndex((user) => user.id === client.id);
+        if (index === -1) return;
+        room.clients.splice(index, 1);
+
+        room.clients.forEach((user) => {
+          server.to(user.id).emit('removePeer', {
+            peer_id: client.id,
+          });
+
+          client.emit('removePeer', {
+            peer_id: user.id,
+          });
+        });
+      });
+    } catch (error) {
+      console.log(error);
+      return false;
+    }
+  }
+
+  async getRoomByClientId(client_id: string): Promise<Room> {
+    const rooms = (await this.cacheManager.get('rooms')) as Room[];
+
+    return rooms.find((room) =>
+      room.clients.some((user) => user.id === client_id),
+    );
   }
 }

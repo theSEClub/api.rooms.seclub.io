@@ -69,4 +69,9 @@ export class RoomsGateway {
       session_description: session_description,
     });
   }
+
+  @SubscribeMessage('disconnect')
+  async handleDisconnect(@ConnectedSocket() client: Socket): Promise<void> {
+    await this.roomsService.removeUserFromRooms(client, this.server);
+  }
 }
