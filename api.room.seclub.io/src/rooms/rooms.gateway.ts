@@ -19,7 +19,7 @@ export class RoomsGateway {
   @WebSocketServer() server: Server;
 
   @SubscribeMessage('join')
-  async handleJoin(client: Socket, data: string): Promise<string[]> {
+  async handleJoin(client: Socket, data: string): Promise<void> {
     const payload = JSON.parse(data);
 
     if (!(await this.roomsService.saveUser(client, payload.username))) {
@@ -36,8 +36,6 @@ export class RoomsGateway {
     ) {
       throw new Error('Error Joining Room');
     }
-
-    return await this.roomsService.getRooms();
   }
 
   @SubscribeMessage('relayICECandidate')
