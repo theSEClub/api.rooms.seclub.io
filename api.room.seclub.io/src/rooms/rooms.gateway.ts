@@ -39,4 +39,20 @@ export class RoomsGateway {
 
     return await this.roomsService.getRooms();
   }
+
+  @SubscribeMessage('relayICECandidate')
+  async handleRelayICECandidate(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: string,
+  ): Promise<void> {
+    const payload = JSON.parse(data);
+
+    const peer_id = payload.peer_id;
+    const ice_candidate = payload.ice_candidate;
+
+    await this.server.to(peer_id).emit('iceCandidate', {
+      peer_id: client.id,
+      ice_candidate: ice_candidate,
+    });
+  }
 }
