@@ -49,7 +49,6 @@ export class RoomsService {
       });
 
       const user = new Client(client.id, username);
-      user.setRoom(new Room(room_id));
       room.addClient(user);
 
       await this.cacheManager.set('rooms', rooms, 0);
@@ -76,13 +75,5 @@ export class RoomsService {
       console.log(error);
       return false;
     }
-  }
-
-  async getClientRoom(client: Socket): Promise<Room> {
-    const users = (await this.cacheManager.get('users')) as Client[];
-
-    const user = users.find((room) => room.id === client.id);
-
-    return user.getRoom();
   }
 }
