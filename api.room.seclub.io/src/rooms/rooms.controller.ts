@@ -1,5 +1,6 @@
 import { Controller, Get } from '@nestjs/common';
 import { RoomsService } from './rooms.service';
+import Room from './dto/room.dto';
 
 @Controller({
   path: 'rooms',
@@ -11,5 +12,10 @@ export class RoomsController {
   @Get()
   async getRooms(): Promise<string[]> {
     return await this.roomsService.getRooms();
+  }
+
+  @Get('/:id')
+  async getRoom(id: string): Promise<Room[]> {
+    return await this.roomsService.getRoom(id);
   }
 }

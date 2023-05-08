@@ -20,9 +20,9 @@ export class RoomsGateway {
 
   @SubscribeMessage('join')
   async handleJoin(client: Socket, data: string): Promise<void> {
-    const payload = JSON.parse(data);
+    console.log('[join] ' + client.id);
 
-    if (!(await this.roomsService.saveUser(client, payload.username))) {
+    if (!(await this.roomsService.saveUser(client, data['username']))) {
       throw new Error('Error Registering User');
     }
 
@@ -30,8 +30,8 @@ export class RoomsGateway {
       !(await this.roomsService.joinRoom(
         this.server,
         client,
-        payload.room_id,
-        payload.username,
+        data['room_id'],
+        data['username'],
       ))
     ) {
       throw new Error('Error Joining Room');
@@ -43,10 +43,10 @@ export class RoomsGateway {
     @ConnectedSocket() client: Socket,
     @MessageBody() data: string,
   ): Promise<void> {
-    const payload = JSON.parse(data);
+    // const payload = JSON.parse(data);
 
-    const peer_id = payload.peer_id;
-    const ice_candidate = payload.ice_candidate;
+    const peer_id = data['peer_id'];
+    const ice_candidate = ['ice_candidate'];
 
     await this.server.to(peer_id).emit('iceCandidate', {
       peer_id: client.id,
@@ -59,10 +59,10 @@ export class RoomsGateway {
     @ConnectedSocket() client: Socket,
     @MessageBody() data: string,
   ): Promise<void> {
-    const payload = JSON.parse(data);
+    // const payload = JSON.parse(data);
 
-    const peer_id = payload.peer_id;
-    const session_description = payload.session_description;
+    const peer_id = data['peer_id'];
+    const session_description = data['session_description'];
 
     await this.server.to(peer_id).emit('sessionDescription', {
       peer_id: client.id,

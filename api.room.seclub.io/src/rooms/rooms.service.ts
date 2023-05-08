@@ -16,6 +16,12 @@ export class RoomsService {
     return await this.cacheManager.get('rooms');
   }
 
+  async getRoom(id: string): Promise<Room[]> {
+    const rooms = (await this.cacheManager.get('rooms')) as Room[];
+    const room = rooms.find((room) => room.id === id);
+    return room ? [room] : [];
+  }
+
   async joinRoom(
     server: Server,
     client: Socket,
