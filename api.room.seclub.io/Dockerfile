@@ -9,4 +9,5 @@ COPY . .
 
 RUN npm run build
 
-CMD ['node', 'dist/main.js']
+RUN chmod +x entrypoint.sh
+ENTRYPOINT ["./entrypoint.sh"]
