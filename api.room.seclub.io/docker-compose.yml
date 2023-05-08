@@ -1,0 +1,12 @@
+version: '3'
+services:
+    rooms:
+        container_name: seclub-api
+        restart: unless-stopped
+        build:
+          context: .
+          dockerfile: Dockerfile
+        extra_hosts:
+            - 'host.docker.internal:host-gateway'
+        ports:
+            - '3000:3000'
