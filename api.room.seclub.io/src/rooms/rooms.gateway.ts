@@ -28,6 +28,7 @@ export class RoomsGateway {
 
     if (
       !(await this.roomsService.joinRoom(
+        this.server,
         client,
         payload.room_id,
         payload.username,

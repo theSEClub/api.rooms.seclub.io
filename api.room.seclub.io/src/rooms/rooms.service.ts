@@ -1,13 +1,15 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
-import { Socket } from 'socket.io';
+import { Socket, Server } from 'socket.io';
+import Client from './dto/client.dto';
+import Room from './dto/room.dto';
 
 @Injectable()
 export class RoomsService {
   constructor(@Inject(CACHE_MANAGER) private cacheManager: Cache) {
-    this.cacheManager.set('rooms', {}, 0);
-    this.cacheManager.set('users', {}, 0);
+    this.cacheManager.set('rooms', [], 0);
+    this.cacheManager.set('users', [], 0);
   }
 
   async getRooms(): Promise<string[]> {
@@ -15,56 +17,72 @@ export class RoomsService {
   }
 
   async joinRoom(
-    socket: Socket,
+    server: Server,
+    client: Socket,
     room_id: string,
     username: string,
   ): Promise<boolean> {
     try {
-      socket.join(room_id);
+      client.join(room_id);
 
-      const all = (await this.cacheManager.get('rooms')) as any;
+      const rooms = (await this.cacheManager.get('rooms')) as Room[];
 
-      const room = Object.keys(all).find((room: string) => room === room_id);
+      let room = rooms.find((room) => room.id === room_id);
 
       if (!room) {
-        all[room_id] = {};
+        room = new Room(room_id);
+        rooms.push(room);
       }
 
-      for (const user in all[room_id]) {
-        socket.to(user).emit('addPeer', {
+      room.clients.forEach((user) => {
+        server.to(user.id).emit('addPeer', {
           username: username,
-          peer_id: socket.id,
+          peer_id: client.id,
           should_create_offer: false,
         });
 
-        socket.emit('addPeer', {
-          username: all[room_id][user],
+        client.emit('addPeer', {
+          username: user.username,
           peer_id: user,
           should_create_offer: true,
         });
-      }
+      });
 
-      all[room_id][socket.id] = username;
+      const user = new Client(client.id, username);
+      user.setRoom(new Room(room_id));
+      room.addClient(user);
 
-      await this.cacheManager.set('rooms', all, 0);
+      await this.cacheManager.set('rooms', rooms, 0);
 
       return true;
     } catch (error) {
+      console.log(error);
       return false;
     }
   }
 
-  async saveUser(socket: Socket, username: string): Promise<boolean> {
+  async saveUser(client: Socket, username: string): Promise<boolean> {
     try {
-      const all = (await this.cacheManager.get('users')) as { id: string }[];
+      const all = (await this.cacheManager.get('users')) as Client[];
 
-      all[socket.id] = username;
+      const user = new Client(client.id, username);
+
+      all[client.id] = user;
 
       await this.cacheManager.set('users', all, 0);
 
       return true;
     } catch (error) {
+      console.log(error);
       return false;
     }
+  }
+
+  async getClientRoom(client: Socket): Promise<Room> {
+    const users = (await this.cacheManager.get('users')) as Client[];
+
+    const user = users.find((room) => room.id === client.id);
+
+    return user.getRoom();
   }
 }
