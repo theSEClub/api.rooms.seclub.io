@@ -53,4 +53,20 @@ export class RoomsGateway {
       ice_candidate: ice_candidate,
     });
   }
+
+  @SubscribeMessage('relaySessionDescription')
+  async handleRelaySessionDescription(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: string,
+  ): Promise<void> {
+    const payload = JSON.parse(data);
+
+    const peer_id = payload.peer_id;
+    const session_description = payload.session_description;
+
+    await this.server.to(peer_id).emit('sessionDescription', {
+      peer_id: client.id,
+      session_description: session_description,
+    });
+  }
 }
