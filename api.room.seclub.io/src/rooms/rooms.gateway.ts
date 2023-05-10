@@ -46,7 +46,7 @@ export class RoomsGateway {
     // const payload = JSON.parse(data);
 
     const peer_id = data['peer_id'];
-    const ice_candidate = ['ice_candidate'];
+    const ice_candidate = data['ice_candidate'];
 
     await this.server.to(peer_id).emit('iceCandidate', {
       peer_id: client.id,

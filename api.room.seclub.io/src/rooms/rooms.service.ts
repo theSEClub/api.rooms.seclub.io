@@ -49,7 +49,7 @@ export class RoomsService {
 
         client.emit('addPeer', {
           username: user.username,
-          peer_id: user,
+          peer_id: user.id,
           should_create_offer: true,
         });
       });
